@@ -6,3 +6,6 @@
 
 # R data files from past sessions
 .Rdata
+StormData.bz2
+repdata-data-StormData.csv.bz2
+cache
