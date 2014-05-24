@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta http-equiv="x-ua-compatible" content="IE=9" >
 
-<title>Title</title>
+<title>Overwheming destructive force of Tornados from 1950-2011</title>
 
 <style type="text/css">
 body, td {
@@ -179,11 +179,13 @@ hljs.initHighlightingOnLoad();
 </head>
 
 <body>
-<h1>Title</h1>
+<h1>Overwheming destructive force of Tornados from 1950-2011</h1>
 
 <h3>Synopsis</h3>
 
-<h3>Loading, Processing and Formatting the Dataset</h3>
+<p>In an effort to better prepare for natural disasters in the United States, we&#39;ve aggregated disaster reports from the U.S. National Oceanic and Atmospheric Administration&#39;s (NOAA) storm database (1950-2011) to look for events that are most harmful financially and physically.  The findings indicate that tornadoes are the combined worst natural disasters we face.  Not only do they cause the most harm to human beings, they are top five worst in financial burden and top five most frequently occurring.</p>
+
+<h3>Data Processing</h3>
 
 <pre><code class="r">stormData &lt;- read.csv(&quot;StormData.bz2&quot;)
 </code></pre>
@@ -252,32 +254,208 @@ st$CROPDMGEXP &lt;- as.numeric(st$CROPDMGEXP)
 st$cropdamage &lt;- (10^st$CROPDMGEXP) * st$CROPDMG
 </code></pre>
 
+<p>Let&#39;s also total up the damage amounts</p>
+
+<pre><code class="r">st$totalDamage &lt;- st$cropdamage + st$propdamage
+</code></pre>
+
+<p>We will now sum up all relevant columns that are necessary to determine the worst disasters.</p>
+
+<pre><code class="r">onlySums &lt;- st[, c(&quot;EVTYPE&quot;, &quot;FATALITIES&quot;, &quot;INJURIES&quot;, &quot;propdamage&quot;, &quot;cropdamage&quot;, 
+    &quot;totalDamage&quot;, &quot;totalHealth&quot;)]
+agged &lt;- aggregate(. ~ EVTYPE, onlySums, sum)
+</code></pre>
+
 <h3>Results</h3>
 
-<p>Now we can begin to look at the health impact by environmental disaster.  We can sum the total events by type, showing the top fifteen worst</p>
+<h4>Health Impact</h4>
 
-<pre><code class="r">onlySums &lt;- st[, c(&quot;EVTYPE&quot;, &quot;FATALITIES&quot;, &quot;INJURIES&quot;, &quot;propdamage&quot;, &quot;totalHealth&quot;)]
-agged &lt;- aggregate(. ~ EVTYPE, onlySums, sum)
-head(agged[order(-agged$totalHealth), ], 15)
+<p>Now we can begin to look at the health impact by environmental disaster.</p>
+
+<pre><code class="r">topFifteen &lt;- head(agged[order(-agged$totalHealth), c(&quot;EVTYPE&quot;, &quot;totalHealth&quot;)], 
+    15)
+topFifteen
 </code></pre>
 
-<pre><code>##                EVTYPE FATALITIES INJURIES propdamage totalHealth
-## 407           TORNADO       5633    91346  5.695e+10       96979
-## 61     EXCESSIVE HEAT       1903     6525  7.754e+06        8428
-## 423         TSTM WIND        504     6957  4.485e+09        7461
-## 86              FLOOD        470     6789  1.447e+11        7259
-## 258         LIGHTNING        816     5230  9.304e+08        6046
-## 151              HEAT        937     2100  1.797e+06        3037
-## 73        FLASH FLOOD        978     1777  1.682e+10        2755
-## 238         ICE STORM         89     1975  3.945e+09        2064
-## 364 THUNDERSTORM WIND        133     1488  3.483e+09        1621
-## 481      WINTER STORM        206     1321  6.688e+09        1527
-## 200         HIGH WIND        248     1137  5.270e+09        1385
-## 134              HAIL         15     1361  1.574e+10        1376
-## 224 HURRICANE/TYPHOON         64     1275  6.931e+10        1339
-## 170        HEAVY SNOW        127     1021  9.328e+08        1148
-## 471          WILDFIRE         75      911  4.765e+09         986
+<pre><code>##                EVTYPE totalHealth
+## 407           TORNADO       96979
+## 61     EXCESSIVE HEAT        8428
+## 423         TSTM WIND        7461
+## 86              FLOOD        7259
+## 258         LIGHTNING        6046
+## 151              HEAT        3037
+## 73        FLASH FLOOD        2755
+## 238         ICE STORM        2064
+## 364 THUNDERSTORM WIND        1621
+## 481      WINTER STORM        1527
+## 200         HIGH WIND        1385
+## 134              HAIL        1376
+## 224 HURRICANE/TYPHOON        1339
+## 170        HEAVY SNOW        1148
+## 471          WILDFIRE         986
 </code></pre>
+
+<p>Based on the total counts above, tornadoes have the worst impact on human life when combining injury and fatalities.  Let&#39;s plot the event types out to get a better sense of scale.</p>
+
+<pre><code class="r">library(lattice)
+barchart(data = topFifteen, EVTYPE ~ totalHealth, xlab = &quot;Combined Fatalities and Injuries&quot;, 
+    main = &quot;Natural Events and Count of Human Death and Injury&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-11"/> </p>
+
+<p>To make sure the top fifteen results aren&#39;t getting skewed by either the injury or fatality counts, lets order by both measureables and compare the top fifteen.</p>
+
+<pre><code class="r">head(agged[order(-agged$FATALITIES), c(&quot;EVTYPE&quot;, &quot;FATALITIES&quot;)], 15)
+</code></pre>
+
+<pre><code>##                EVTYPE FATALITIES
+## 407           TORNADO       5633
+## 61     EXCESSIVE HEAT       1903
+## 73        FLASH FLOOD        978
+## 151              HEAT        937
+## 258         LIGHTNING        816
+## 423         TSTM WIND        504
+## 86              FLOOD        470
+## 306       RIP CURRENT        368
+## 200         HIGH WIND        248
+## 11          AVALANCHE        224
+## 481      WINTER STORM        206
+## 307      RIP CURRENTS        204
+## 153         HEAT WAVE        172
+## 67       EXTREME COLD        160
+## 364 THUNDERSTORM WIND        133
+</code></pre>
+
+<pre><code class="r">head(agged[order(-agged$INJURIES), c(&quot;EVTYPE&quot;, &quot;INJURIES&quot;)], 15)
+</code></pre>
+
+<pre><code>##                EVTYPE INJURIES
+## 407           TORNADO    91346
+## 423         TSTM WIND     6957
+## 86              FLOOD     6789
+## 61     EXCESSIVE HEAT     6525
+## 258         LIGHTNING     5230
+## 151              HEAT     2100
+## 238         ICE STORM     1975
+## 73        FLASH FLOOD     1777
+## 364 THUNDERSTORM WIND     1488
+## 134              HAIL     1361
+## 481      WINTER STORM     1321
+## 224 HURRICANE/TYPHOON     1275
+## 200         HIGH WIND     1137
+## 170        HEAVY SNOW     1021
+## 471          WILDFIRE      911
+</code></pre>
+
+<p>In both cases tornadoes were clearly more destructive.</p>
+
+<p>Let&#39;s also check out the frequency of these disasters.</p>
+
+<pre><code class="r">freqs &lt;- as.data.frame(with(onlySums, table(EVTYPE)))
+head(freqs[order(-freqs$Freq), c(&quot;EVTYPE&quot;, &quot;Freq&quot;)], 15)
+</code></pre>
+
+<pre><code>##                 EVTYPE  Freq
+## 856          TSTM WIND 63234
+## 760  THUNDERSTORM WIND 43655
+## 834            TORNADO 39944
+## 244               HAIL 26130
+## 153        FLASH FLOOD 20967
+## 464          LIGHTNING 13293
+## 786 THUNDERSTORM WINDS 12086
+## 170              FLOOD 10175
+## 359          HIGH WIND  5522
+## 676        STRONG WIND  3370
+## 972       WINTER STORM  1508
+## 310         HEAVY SNOW  1342
+## 290         HEAVY RAIN  1105
+## 957           WILDFIRE   857
+## 427          ICE STORM   708
+</code></pre>
+
+<h4>Economic Impact</h4>
+
+<p>We already have all of the event types aggregated, so we can take a look at the top fifteen worst disasters by economic impact (the combined dollar amount of estimated crop and property damage).</p>
+
+<pre><code class="r">topFifteenProp &lt;- head(agged[order(-agged$totalDamage), c(&quot;EVTYPE&quot;, &quot;totalDamage&quot;)], 
+    15)
+topFifteenProp
+</code></pre>
+
+<pre><code>##                EVTYPE totalDamage
+## 86              FLOOD   1.503e+11
+## 224 HURRICANE/TYPHOON   7.191e+10
+## 407           TORNADO   5.736e+10
+## 350       STORM SURGE   4.332e+10
+## 134              HAIL   1.876e+10
+## 73        FLASH FLOOD   1.824e+10
+## 49            DROUGHT   1.502e+10
+## 215         HURRICANE   1.461e+10
+## 310       RIVER FLOOD   1.015e+10
+## 238         ICE STORM   8.967e+09
+## 417    TROPICAL STORM   8.382e+09
+## 481      WINTER STORM   6.715e+09
+## 200         HIGH WIND   5.909e+09
+## 471          WILDFIRE   5.061e+09
+## 423         TSTM WIND   5.039e+09
+</code></pre>
+
+<p>Flooding ranks highest on the total financial damage list.  Again, we can plot this information to get a sense of how much more destructive floods were than any other disaster.</p>
+
+<pre><code class="r">barchart(data = topFifteenProp, EVTYPE ~ totalDamage, xlab = &quot;Combined Crop and Property Damage&quot;, 
+    main = &quot;Natural Events and Financial Loss&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-15"/> </p>
+
+<p>Based on this information, floods have cost roughly 6 billion dollars more than the next leading disaster candidate, hurricanes.</p>
+
+<p>To get a better sense of the types of events that impact property vs crop damage, let&#39;s sort the list by each damage type.</p>
+
+<pre><code class="r">head(agged[order(-agged$cropdamage), c(&quot;EVTYPE&quot;, &quot;cropdamage&quot;)], 15)
+</code></pre>
+
+<pre><code>##                EVTYPE cropdamage
+## 49            DROUGHT  1.397e+10
+## 86              FLOOD  5.662e+09
+## 310       RIVER FLOOD  5.029e+09
+## 238         ICE STORM  5.022e+09
+## 134              HAIL  3.026e+09
+## 215         HURRICANE  2.742e+09
+## 224 HURRICANE/TYPHOON  2.608e+09
+## 73        FLASH FLOOD  1.421e+09
+## 67       EXTREME COLD  1.293e+09
+## 114      FROST/FREEZE  1.094e+09
+## 159        HEAVY RAIN  7.334e+08
+## 417    TROPICAL STORM  6.783e+08
+## 200         HIGH WIND  6.386e+08
+## 423         TSTM WIND  5.540e+08
+## 61     EXCESSIVE HEAT  4.924e+08
+</code></pre>
+
+<pre><code class="r">head(agged[order(-agged$propdamage), c(&quot;EVTYPE&quot;, &quot;propdamage&quot;)], 15)
+</code></pre>
+
+<pre><code>##                EVTYPE propdamage
+## 86              FLOOD  1.447e+11
+## 224 HURRICANE/TYPHOON  6.931e+10
+## 407           TORNADO  5.695e+10
+## 350       STORM SURGE  4.332e+10
+## 73        FLASH FLOOD  1.682e+10
+## 134              HAIL  1.574e+10
+## 215         HURRICANE  1.187e+10
+## 417    TROPICAL STORM  7.704e+09
+## 481      WINTER STORM  6.688e+09
+## 200         HIGH WIND  5.270e+09
+## 310       RIVER FLOOD  5.119e+09
+## 471          WILDFIRE  4.765e+09
+## 351  STORM SURGE/TIDE  4.641e+09
+## 423         TSTM WIND  4.485e+09
+## 238         ICE STORM  3.945e+09
+</code></pre>
+
+<p>Not surprisingly, drought was the worst killer of crops with flooding close behind.</p>
 
 </body>
 

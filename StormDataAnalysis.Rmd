@@ -1,9 +1,11 @@
-Title
+Overwheming destructive force of Tornados from 1950-2011
 ========================================================
 
 ### Synopsis
 
-### Loading, Processing and Formatting the Dataset
+In an effort to better prepare for natural disasters in the United States, we've aggregated disaster reports from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database (1950-2011) to look for events that are most harmful financially and physically.  The findings indicate that tornadoes are the combined worst natural disasters we face.  Not only do they cause the most harm to human beings, they are top five worst in financial burden and top five most frequently occurring.
+
+### Data Processing
 
 ```{r cache=TRUE}
 stormData <- read.csv('StormData.bz2')
@@ -61,17 +63,75 @@ st$CROPDMGEXP <- as.numeric(st$CROPDMGEXP)
 st$cropdamage <- (10^st$CROPDMGEXP) * st$CROPDMG
 ```
 
-### Results
-
-Now we can begin to look at the health impact by environmental disaster.  We can sum the total events by type, showing the top fifteen worst
+Let's also total up the damage amounts
 
 ```{r}
-onlySums <- st[, c("EVTYPE", "FATALITIES", "INJURIES", "propdamage", "totalHealth")]
-agged <- aggregate(. ~ EVTYPE, onlySums, sum)
-head(agged[order(-agged$totalHealth), c("EVTYPE", "totalHealth")], 15)
+st$totalDamage <- st$cropdamage + st$propdamage
 ```
 
-Based on the total counts above, tornadoes have the worst impact on human life.
+We will now sum up all relevant columns that are necessary to determine the worst disasters.
 
-NOTE -> see if there is a correlation between health and economic risk.
+```{r}
+onlySums <- st[, c("EVTYPE", "FATALITIES", "INJURIES", "propdamage", "cropdamage", "totalDamage", "totalHealth")]
+agged <- aggregate(. ~ EVTYPE, onlySums, sum)
+```
+
+### Results
+
+#### Health Impact
+
+Now we can begin to look at the health impact by environmental disaster.
+
+```{r}
+topFifteen <- head(agged[order(-agged$totalHealth), c("EVTYPE", "totalHealth")], 15)
+topFifteen
+```
+
+Based on the total counts above, tornadoes have the worst impact on human life when combining injury and fatalities.  Let's plot the event types out to get a better sense of scale.
+
+```{r}
+library(lattice)
+barchart(data = topFifteen, EVTYPE ~ totalHealth, xlab = "Combined Fatalities and Injuries", main = "Natural Events and Count of Human Death and Injury")
+```
+
+To make sure the top fifteen results aren't getting skewed by either the injury or fatality counts, lets order by both measureables and compare the top fifteen.
+
+```{r}
+head(agged[order(-agged$FATALITIES), c("EVTYPE", "FATALITIES")], 15)
+head(agged[order(-agged$INJURIES), c("EVTYPE", "INJURIES")], 15)
+```
+
+In both cases tornadoes were clearly more destructive.
+
+Let's also check out the frequency of these disasters.
+
+```{r}
+freqs <- as.data.frame(with(onlySums, table(EVTYPE)))
+head(freqs[order(-freqs$Freq), c("EVTYPE", "Freq")], 15)
+```
+
+#### Economic Impact
+
+We already have all of the event types aggregated, so we can take a look at the top fifteen worst disasters by economic impact (the combined dollar amount of estimated crop and property damage).
+
+```{r}
+topFifteenProp <- head(agged[order(-agged$totalDamage), c("EVTYPE", "totalDamage")], 15)
+topFifteenProp
+```
+
+Flooding ranks highest on the total financial damage list.  Again, we can plot this information to get a sense of how much more destructive floods were than any other disaster.
+```{r}
+barchart(data = topFifteenProp, EVTYPE ~ totalDamage, xlab = "Combined Crop and Property Damage", main = "Natural Events and Financial Loss")
+```
+
+Based on this information, floods have cost roughly 6 billion dollars more than the next leading disaster candidate, hurricanes.
+
+To get a better sense of the types of events that impact property vs crop damage, let's sort the list by each damage type.
+
+```{r}
+head(agged[order(-agged$cropdamage), c("EVTYPE", "cropdamage")], 15)
+head(agged[order(-agged$propdamage), c("EVTYPE", "propdamage")], 15)
+```
+
+Not surprisingly, drought was the worst killer of crops with flooding close behind.
 
